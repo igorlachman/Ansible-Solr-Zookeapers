@@ -1,0 +1,5 @@
+---
+# vars file for install_solr
+#
+archive_name : solr-6.6.3.tgz
+LOGNAME : ec2-user

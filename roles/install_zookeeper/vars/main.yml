@@ -1,0 +1,4 @@
+---
+# vars file for install_zookeeper
+archive_name : zookeeper-3.4.13.tar.gz
+LOGNAME      : ec2-user

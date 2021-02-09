@@ -1,0 +1,26 @@
+---
+# tasks file for upd_serv_for_solr
+- name          : Install openjdk
+  yum           : name=java-1.8.0-openjdk.x86_64
+  become        : true
+
+- name          : Version java
+  alternatives  :
+    name        : java
+    path        : /usr/lib/jvm/jre-1.8.0-openjdk.x86_64/bin/java
+  become        : true
+
+- name          : Check java version
+  shell         : java -version 2>&1 | grep version | awk '{print $3}' | sed 's/"//g'
+  changed_when  : False
+  register      : java_result
+  become        : true
+
+- debug         :
+    msg         : "{{ java_result.stdout }}"
+
+- name          : Install ansible
+  shell         :
+    cmd         : pip install ansible
+  become        : true
+...

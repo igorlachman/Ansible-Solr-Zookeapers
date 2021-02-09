@@ -1,0 +1,51 @@
+---
+- name: check if solr directory exists
+  stat :  
+    path  : /opt/solr-6.6.3/
+  register : exdir
+
+- debug:
+    msg: "File exists..."
+  when: exdir.stat.exists
+- debug:
+    msg: "File not found"
+  when: exdir.stat.exists == False
+
+- name: Upload solr archive to server  
+  copy     :
+    src    : "{{ archive_name}}"
+    dest   : /opt/
+    owner  : "{{ LOGNAME }}"
+    group  : "{{ LOGNAME }}"
+    mode   : '0644'
+  become : true
+  when: exdir.stat.exists == False
+
+- name       : Unpack archcive and install 
+  shell      :
+    cmd      : tar xzf "{{ archive_name}}" solr-6.6.3/bin/install_solr_service.sh --strip-components=2 && ./install_solr_service.sh "{{ archive_name}}"
+    chdir    : /opt/
+  become     : true
+  when       : exdir.stat.exists == False
+
+- name       : Stopping solr as a service
+  service  : name=solr state=stopped
+  become : true
+
+- name       : Change owner solr folder
+  shell      : 
+    cmd      : 'chown -R "{{ LOGNAME }}": /opt/solr*'
+  become   : true  
+
+- name       : Change file hosts
+  copy       :
+    src      : hosts
+    dest     : /etc/hosts
+    owner    : root
+    group    : root
+    backup   : yes
+  become : true
+
+- name: Include install solr
+  include: solr_up.yml
+...

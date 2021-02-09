@@ -1,0 +1,60 @@
+---
+- name      : Copy Binary in solr for enable ssl and auth
+  copy      :
+    src     : solr.in.sh
+    dest    : /opt/solr/bin/solr.in.sh
+    owner   : ec2-user
+    group   : ec2-user
+    mode    : '0644'
+
+- name      : Copy security.json
+  copy      :
+    src     : security.json
+    dest    : /opt/solr/security.json
+    owner   : ec2-user
+    group   : ec2-user
+    mode    : '0644'
+
+- name      : Copy Certificate
+  copy      :
+    src     : solr-ssl.keystore.jks
+    dest    : /opt/solr/server/etc/solr-ssl.keystore.jks
+    owner   : ec2-user
+    group   : ec2-user
+    mode    : '0644'
+
+- name      : Copy Certificate PEM for curl
+  copy      :
+    src     : solr-ssl.pem
+    dest    : /home/ec2-user/solr-ssl.pem
+    owner   : ec2-user
+    group   : ec2-user
+    mode    : '0644'
+
+- name      : Copy file curl change solr pass
+  copy      :
+    src     : curl_auth.sh
+    dest    : /opt/solr/curl_auth.sh
+    owner   : ec2-user
+    group   : ec2-user
+    mode    : '0644'
+
+- name      : Enable https for zookeeper
+  shell     :
+    cmd     : "sh ./server/scripts/cloud-scripts/zkcli.sh -zkhost zookeeper-nodes:2181,zookeeper-nodes:2182,zookeeper-nodes:2183 -cmd clusterprop -name urlScheme -val https"
+    chdir   : /opt/solr/
+
+- name      : Upload security.json to zookeeper
+  shell     :
+    cmd     : "bin/solr zk cp file:./security.json zk:/security.json -z zookeeper-nodes:2181,zookeeper-nodes:2182,zookeeper-nodes:2183"
+    chdir   : /opt/solr/
+
+- name      : Change password for user solr
+  shell     :
+    cmd     : "sh /opt/solr/curl_auth.sh"
+    chdir   : /opt/solr/
+
+- name      : restart servers
+  shell     :
+    cmd     : "bin/solr restart -c -p 8984 -z zookeeper-nodes:2181,zookeeper-nodes:2182,zookeeper-nodes:2183"
+    chdir   : /opt/solr/

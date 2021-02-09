@@ -1,0 +1,7 @@
+[solr_group]
+solr-node-1 ansible_host={{solr-node-1_host}}
+solr-node-2 ansible_host={{solr-node-2_host}}
+solr-node-3 ansible_host={{solr-node-3_host}}
+
+[zookeeper_node]
+zookeeper-nodes ansible_host={{zookeeper-node-1_host}}

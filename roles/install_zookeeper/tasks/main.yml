@@ -1,0 +1,124 @@
+---
+# tasks file for install_zookeeper
+- name: check if zookeeper directory exists
+  stat :
+    path  : /opt/zookeeper-3.4.13/
+  register : exdir
+
+- name : check zookeeper installed
+  stat :
+    path : /opt/zookeeper/
+  register : zoo_install
+
+- debug:
+    msg: "File exists..."
+  when: exdir.stat.exists
+- debug:
+    msg: "File not found"
+  when: exdir.stat.exists == False
+
+- name: Upload zookeeper archive to server
+  copy     :
+    src    : "{{archive_name}}"
+    dest   : /opt/
+    owner  : "{{LOGNAME}}"
+    group  : "{{LOGNAME}}"
+    mode   : '0644'
+  become : true
+  when: exdir.stat.exists == False
+
+- name: Unpack zookeeper
+  shell:
+    cmd: 'cd /opt/ && tar xzf "{{archive_name}}"'
+  become: true
+  when: zoo_install.stat.exists == False
+
+- name: Setting up zookeeper
+  shell:
+    cmd: ln -s /opt/zookeeper-3.4.13 /opt/zookeeper && mkdir /opt/zookeeper/data
+  become: true
+  when: zoo_install.stat.exists == False
+
+- name : check myid for zookeeper
+  stat :
+    path : /opt/zookeeper/data/3/myid
+  register : myid_install
+
+- name: Continunous installing 
+  shell:
+    cmd: mkdir /opt/zookeeper/data/1/ /opt/zookeeper/data/2/ /opt/zookeeper/data/3/
+  become: true
+  when: myid_install.stat.exists == False
+
+- name : Change owner
+  shell:
+    cmd: 'chown -R "{{LOGNAME}}": /opt/zookeeper*'
+  become: true
+
+- name: Continunous installing
+  shell:
+    cmd: echo 1 > /opt/zookeeper/data/1/myid && echo 2 > /opt/zookeeper/data/2/myid && echo 3 > /opt/zookeeper/data/3/myid
+  become: true
+  when: myid_install.stat.exists == False
+
+- name : Copy zoo.cfg
+  copy:
+    src: zoo.cfg
+    dest: /opt/zookeeper/conf/zoo.cfg
+  become : true
+
+- name : Copy zoo2.cfg
+  copy:
+    src: zoo2.cfg
+    dest: /opt/zookeeper/conf/zoo2.cfg
+  become : true
+
+- name : Copy zoo3.cfg
+  copy:
+    src: zoo3.cfg
+    dest: /opt/zookeeper/conf/zoo3.cfg 
+  become : true
+
+- name : Change owner
+  shell:
+    cmd: 'chown -R "{{LOGNAME}}": /opt/zookeeper*'
+  become: true
+
+- name       : Change file hosts
+  copy       :
+    src      : hosts
+    dest     : /etc/hosts
+    owner    : root
+    group    : root
+    backup   : yes
+  become : true
+
+- name : 'Start first ZooKeppers node :2181'
+  shell:
+    cmd: /opt/zookeeper/bin/zkServer.sh start /opt/zookeeper/conf/zoo.cfg
+  become: true
+
+- name : 'Start second ZooKeppers node :2182'                          
+  shell:
+    cmd: /opt/zookeeper/bin/zkServer.sh start /opt/zookeeper/conf/zoo2.cfg
+  become: true
+- name : 'Start third ZooKeppers node :2183'
+  shell:
+    cmd: /opt/zookeeper/bin/zkServer.sh start /opt/zookeeper/conf/zoo3.cfg
+  become: true
+
+- name: check status zookeeprs node
+  shell: 'echo status | nc localhost "{{item}}"'
+  register : zoo_node_status
+  with_items:
+      - 2181
+      - 2182
+      - 2183
+
+- name: print zoo nodes status
+  debug:
+    msg: '"{{item.item}}", netstat stdout was: "{{item.stdout}}"'
+  with_items:
+      - "{{zoo_node_status.results}}"
+
+...

@@ -1,0 +1,7 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost6 localhost6.localdomain6
+
+172.31.34.163 zookeeper-nodes
+172.31.23.214 solr-node-1
+172.31.27.52 solr-node-2
+172.31.35.73 solr-node-3

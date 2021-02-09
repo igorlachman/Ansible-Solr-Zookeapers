@@ -1,0 +1,15 @@
+---
+- name: Install java on servers (must be 1.8) and ansible
+  hosts: all
+  roles:
+    - upd_serv_for_solr
+
+- name: Install (Update) Zookeeper node
+  hosts: zookeeper-nodes
+  roles:
+    - install_zookeeper 
+
+- name: Install (Update) Solr nodes
+  hosts: solr_group
+  roles:
+    - install_solr
